@@ -2,12 +2,12 @@ module.exports = {
   title: `Abelog`,
   description: `Blog posted about ...`,
   author: `[Abel ko]`,
-  introduction: `이 세상을 먼지처럼 살다 갈 👨🏽‍💻입니다. 👨🏽‍🍳와 🎵을 사랑하고 비지니스에 관심이 많습니다.🙌 언젠간 크게 사업을 성공도 하고💵, 베어베터같은 사회적기업을 만드는 것이 꿈입니다.⭐️`,
+  introduction: `이 세상을 먼지처럼 살다 갈 👨🏽‍💻입니다. 👨🏽‍🍳와 🏀,🎸을 사랑하고 비지니스에 관심이 많습니다.🙌 언젠간 크게 사업을 성공도 하고💵, 베어베터같은 사회적기업을 만드는 것이 꿈입니다.⭐️`,
   siteUrl: `https://gatsby-starter-bee.netlify.com`, // Your blog site url
   social: {
     twitter: ``,
-    github: `https://github.com/livelikeabel`, // Your GitHub account
-    facebook: `https://www.facebook.com/profile.php?id=100014350666563`, // Your Facebook account
+    github: `livelikeabel`, // Your GitHub account
+    facebook: `profile.php?id=100014350666563`, // Your Facebook account
     medium: ``
   },
   icon: `content/assets/felog.png`, // Add your favicon
