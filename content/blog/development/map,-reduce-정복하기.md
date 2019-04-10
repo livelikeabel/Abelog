@@ -65,7 +65,84 @@ parseInt는 두개의 인자(value, 진법)를 받을 수 있고, map은 콜백�
 
 위와 같이 하나만 넘겨주면 깔끔!
 
+## reduce
+
+`reduce()` 메서드는 배열의 각 요소에 대해 주어진 reducer 함수를 실행하고, 하나의 결과값을 반환한다.
+
+```js
+const reduer = (acc, cur, i, arr) => return `result_value`
+arr.reduce(reducer, initialValue);
+```
+
+#### reduce는 reducer 함수와 initialValue를 인자로 받는다.
+
+1. reducer는 네 개의 인자를 가진다.
+
+```
+1. 누산기(accumulator) - 콜백의 반환값이 누적된다.
+2. 현재 값
+3. 현재 인덱스 - `initialValue`를 제공한 경우 0, 아니면 1부터 시작한다.
+4. 원본 배열
+```
+
+=> 리듀서 함수의 반환 값은 누산기(acc)에 할당되고, 누산기는 순회 중 **유지**되므로 최종 결과는 <u>**하나의 값**</u>이 된다.
+
+2. initialValue
+
+- acc에 초기값을 제공한다. 초기값이 없으면 배열의 첫번째 요소를 사용한다.
+- 빈 배열에서 초기값 없이 `reduce()`를 호출하면 오류가 발생한다. 초기값을 주는게 안전하다.
+
+### reduce 활용
+
+#### 중첩 배열 펼치기(flatten)
+
+```js
+const flattended = [[0, 1], [2, 3], [4, 5]].reduce(
+  (acc, cur) => acc.concat(cur),
+  []
+)
+```
+
+> [concat()](https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/concat) : 인자로 주어진 배열이나 값들을 기존 배열에 합쳐서 새 배열을 반환합니다.
+
+#### 배열의 중복 항목 제거하기
+
+```js
+let arr = [1, 2, 1, 2, 3, 5, 4, 5, 3, 4, 4, 4, 4]
+
+arr.sort().reduce((acc, cur) => {
+  const length = acc.length
+  if (length === 0 || acc[length - 1] !== cur) {
+    acc.push(cur)
+  }
+  return acc
+}, [])
+// [1, 2, 3, 4, 5]
+```
+
+> - 좋은 중복제거 방법인가....? 예외 처리할게 너무 많다... 하지만 reduce로는 거의 상상한 모든것을 할 수 있다는 것을 느낀다.
+> - 초간단한 배열의 중복 제거 방법! : `[...new Set(arr)]`
+
+#### 함수 구성을 위한 파이프 함수
+
+```js
+const double = x => x + x
+const triple = x => 3 * x
+
+const pipe = (...functions) => input =>
+  functions.reduce((acc, fn) => fn(acc), input)
+
+const multiply6 = pipe(
+  double,
+  triple
+)
+multiply6(6) // 36
+```
+
+=> reduce를 통해 pipe 함수를 만들 수 있다!
+
 출처:
 
 - https://github.com/livelikeabel/AbelKo
 - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/map
+- https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
