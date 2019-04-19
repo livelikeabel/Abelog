@@ -1,5 +1,5 @@
 ---
-title: '[VanillaJS] createElement, appendChild을 사용해 동적으로 테이블 만들기'
+title: 'createElement, appendChild을 사용해 동적으로 테이블 만들기'
 date: 2019-04-19 13:04:29
 category: javascript
 ---

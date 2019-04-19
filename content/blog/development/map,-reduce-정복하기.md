@@ -6,6 +6,10 @@ category: development
 
 map과 reduce는 js의 배열 메소드 중 가장 유용하고, 자주 쓰는 메소드이다. 좀 더 정확한 사용법이 궁금해져서, 따로 기록을 해보려고 한다.
 
+결론부터 이야기 하면, 배열에 있는 고차함수를 쓰는 원리는 간단하다.
+
+**배열을 루프돌고 싶으면, `forEach` 배열의 원소를 바꾼 배열을 얻고 싶으면, `map` 하나의 값으로 뭉치고 싶으면 `reduce`를 쓰면된다.**
+
 ## map
 
 > Array.prototype.map
@@ -146,3 +150,4 @@ multiply6(6) // 36
 - https://github.com/livelikeabel/AbelKo
 - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/map
 - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
+- https://www.youtube.com/watch?v=_JGchAMbPGI&list=PLBNdLLaRx_rKT18ivygZ7Jmi_4h5zb2wv
