@@ -58,6 +58,12 @@ JSON.parse(JSON.stringify(obj1));
 ```
 > 좋은 방법일까...? C로 돌려서 빠르긴 한다던데... 깊은 복사를 해야할 일이 생긴다면 이렇게 하는걸 추천한다고 하네엽..!
 
+### TIP
+
+```js
+const prop = (...arg) => Object.assign(...arg);
+```
+> prop util을 만들어, 인자로 받은 객체들을 하나로 병합해줄 수 있다.
 
 #### 출처 👇🏽
 https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
