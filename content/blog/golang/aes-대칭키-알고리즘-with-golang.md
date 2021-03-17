@@ -68,56 +68,70 @@ import (
 	"strings"
 )
 
-type CodecFunc func(src string) (string, error)
-
-func NewEncryptor(cipherKey string, cipherIvKey string) CodecFunc {
-	return func(plainText string) (string, error) {
-		if strings.TrimSpace(plainText) == "" {
-			return plainText, nil
-		}
-
-		block, err := aes.NewCipher([]byte(cipherKey))
-		if err != nil {
-			return "", err
-		}
-
-		encrypter := cipher.NewCBCEncrypter(block, newIvKey(cipherIvKey))
-		paddedPlainText := padPKCS7([]byte(plainText), encrypter.BlockSize())
-		cipherText := make([]byte, len(paddedPlainText))
-		// CryptBlocks 함수에 데이터(paddedPlainText)와 암호화 될 데이터를 저장할 슬라이스(cipherText)를 넣으면 암호화가 된다.
-		encrypter.CryptBlocks(cipherText, paddedPlainText)
-
-		return base64.StdEncoding.EncodeToString(cipherText), nil
-	}
+type Crypto interface {
+	Encrypt(plainText string) (string, error)
+	Decrypt(cipherIvKey string) (string, error)
 }
 
-func NewDecryptor(cipherKey string, cipherIvKey string) CodecFunc {
-	return func(cipherText string) (string, error) {
-		if strings.TrimSpace(cipherText) == "" {
-			return cipherText, nil
-		}
-
-		decodedCipherText, err := base64.StdEncoding.DecodeString(cipherText)
-		if err != nil {
-			return "", err
-		}
-
-		block, err := aes.NewCipher([]byte(cipherKey))
-		if err != nil {
-			return "", err
-		}
-
-		decrypter := cipher.NewCBCDecrypter(block, newIvKey(cipherIvKey))
-		plainText := make([]byte, len(decodedCipherText))
-		decrypter.CryptBlocks(plainText, decodedCipherText)
-		trimmedPlainText := trimPKCS5(plainText)
-
-		return string(trimmedPlainText), nil
-	}
+type niceCrypto struct {
+	cipherKey  string
+	cipherIvKey string
 }
 
-func newIvKey(s string) []byte {
-	return []byte(s[:16])
+func (c niceCrypto) Encrypt(plainText string) (string, error) {
+	if strings.TrimSpace(plainText) == "" {
+		return plainText, nil
+	}
+
+	block, err := aes.NewCipher([]byte(c.cipherKey))
+	if err != nil {
+		return "", err
+	}
+
+	encrypter := cipher.NewCBCEncrypter(block, []byte(c.cipherIvKey))
+	paddedPlainText := padPKCS7([]byte(plainText), encrypter.BlockSize())
+
+	cipherText := make([]byte, len(paddedPlainText))
+	// CryptBlocks 함수에 데이터(paddedPlainText)와 암호화 될 데이터를 저장할 슬라이스(cipherText)를 넣으면 암호화가 된다.
+	encrypter.CryptBlocks(cipherText, paddedPlainText)
+
+	return base64.StdEncoding.EncodeToString(cipherText), nil
+}
+
+func (c niceCrypto) Decrypt(cipherText string) (string, error) {
+	if strings.TrimSpace(cipherText) == "" {
+		return cipherText, nil
+	}
+
+	decodedCipherText, err := base64.StdEncoding.DecodeString(cipherText)
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher([]byte(c.cipherKey))
+	if err != nil {
+		return "", err
+	}
+
+	decrypter := cipher.NewCBCDecrypter(block, []byte(c.cipherIvKey))
+	plainText := make([]byte, len(decodedCipherText))
+
+	decrypter.CryptBlocks(plainText, decodedCipherText)
+	trimmedPlainText := trimPKCS5(plainText)
+
+	return string(trimmedPlainText), nil
+}
+
+func NewNiceCrypto(cipherKey, cipherIvKey) (Crypto, error) {
+	if ck := len(cipherKey); ck != 32 {
+		return nil, aes.KeySizeError(ck)
+	}
+
+	if cik := len(cipherIvKey); cik != 16 {
+		return nil, aes.KeySizeError(cik)
+	}
+
+	return &niceCrypto{cipherKey, cipherIvKey}
 }
 
 func padPKCS7(plainText []byte, blockSize int) []byte {
@@ -144,14 +158,35 @@ import (
 )
 
 func TestEncrypt(t *testing.T) {
+	t.Run("valid key size", func(t *testing.T) {
+		cipherKey := "CIPHERKEY01234567890123456789012"
+		cipherIvKey := "CIPHERIVKEY01234"
+		
+		c, err := NewNiceCrypto(cipherKey, cipherIvKey)
+
+		assert.NoError(t, err)
+		assert.Equal(t, &niceCrypto{cipherKey, cipherIvKey}, c)
+	})
+
+	t.Run("invalid key size", func(t *testing.T) {
+		cipherKey := "CIPHERKEY01234567"
+		cipherIvKey := "CIPHERIVKEY"
+
+		_, err := NewNiceCrypto(cipherKey, cipherIvKey)
+
+		assert.Error(err)
+	})
+
 	t.Run("plain test `Abel Ko` should be equal `HD4PbbIOrV10Qc/+/7e+IA==`", func(t *testing.T) {
 		cipherKey := "CIPHERKEY01234567890123456789012"
 		cipherIvKey := "CIPHERIVKEY01234"
 		plainText := "Abel Ko"
 		expected := "HD4PbbIOrV10Qc/+/7e+IA=="
 
-		cipher, err := NewEncryptor(cipherKey, cipherIvKey)(plainText)
+		c, err := NewNiceCrypto(cipherKey, cipherIvKey)
+		assert.NoError(t, err)
 
+		cipher, err := c.Encrypt(plainText)
 		assert.NoError(t, err)
 		assert.EqualValues(t, expected, cipher)
 	})
@@ -164,8 +199,10 @@ func TestDecrypt(t *testing.T) {
 		chiperText := "HD4PbbIOrV10Qc/+/7e+IA=="
 		expected := "Abel Ko"
 
-		actual, err := NewDecryptor(cipherKey, cipherIvKey)(chiperText)
+		c, err := NewNiceCrypto(cipherKey, cipherIvKey)
+		assert.NoError(t, err)
 
+		actual, err := c.Decrypt(chiperText)
 		assert.NoError(t, err)
 		assert.EqualValues(t, expected, actual)
 	})
